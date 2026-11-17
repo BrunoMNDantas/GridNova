@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "paths": { "gridnova": ["../src/index.ts"] }
+  },
+  "include": ["src", "vite.config.ts"]
+}
