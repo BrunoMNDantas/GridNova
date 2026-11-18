@@ -14,7 +14,8 @@ Strict dependency resolution catches undeclared dependencies on the developer's 
 
 ### 3. Public API: `<Grid>` with slots and CSS variables
 
-- Users get a styled `<Grid>`, customizable through slots (replacing parts such as `Cell` or `Header`) and CSS variables.
+- Users get a styled `<Grid>`, customizable through `slots` (replacing parts such as `cell` or `header`), `slotProps` (extra props for a part, including `className` and `style`; there is no separate classes prop) and CSS variables.
+- `slots` and `slotProps` share lowercase keys. Conflict rules for `slotProps`: the grid's own attributes (roles, ARIA, `data-*`) win, `className` and `style` merge, and event handlers compose (both run). Each part added to `slots` gets its `slotProps` entry with it.
 - Internals are layered: logic lives in hooks that render nothing, components stay thin, CSS does styling.
 - The hooks are **not** public API for now. They may be exported later if proven stable and needed.
 - Slots are added per feature as needed, not speculatively. Each slot's props are public API.

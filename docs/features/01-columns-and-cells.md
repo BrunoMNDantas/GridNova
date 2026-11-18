@@ -10,7 +10,7 @@ Replace the scaffold placeholder `Grid` with the real foundation: typed column d
 
 - `Column<T>` definition: identity, header text, how to read the value from a row, optional custom cell rendering, optional width.
 - Header and cell rendering with accessible roles.
-- Customization through slots (decision 3): `Cell` and `Header`.
+- Customization through `slots` and `slotProps` (decision 3) for the `cell` and `header` parts.
 - Default styling with `--gridnova-` CSS variables (decision 18), delivered to consumers in the way decided below.
 - `data-*` styling hooks (decision 22): `data-column-id` on headers and cells.
 - Playground demo and tests.
@@ -38,9 +38,12 @@ Row ids and row-model details (feature 2), scrolling and sticky header (3), virt
 ### D3. Where customization lives
 
 - **Per column:** `renderCell: ({ value, row }) => ReactNode` replaces only the content inside the default cell (formatting a date, rendering a badge). This is what most users need.
-- **Grid-level slots:** `slots={{ Cell, Header }}` replace the whole cell or header element for every column (decision 3).
+- **Grid-level slots:** `slots={{ cell, header }}` replace the whole cell or header element for every column (decision 3).
+- **Grid-level slot props:** `slotProps={{ cell, header }}` add props (`className`, `style`, handlers, attributes) to the default or replaced part without replacing it.
 
-**Recommendation: both**, kept minimal: per-column `renderCell`, and grid-level `Cell` and `Header` slots. Each slot's props become public API, so they stay small (`value`, `row`, `column` for `Cell`; `column` for `Header`).
+**Decided (owner):** `slots` and `slotProps` with shared lowercase keys, and no separate classes prop (`slotProps.<part>.className` covers it). Conflict rules: the grid's own attributes (roles, ARIA, `data-*`) win, `className` and `style` merge, event handlers compose.
+
+**Recommendation for the rest: also per-column `renderCell`**, kept minimal. Each slot's props become public API, so they stay small (`value`, `row`, `column` for `cell`; `column` for `header`).
 
 ### D4. How CSS reaches consumers
 
@@ -65,7 +68,8 @@ interface Column<T, V = unknown> {
 interface GridProps<T> {
   rows: readonly T[]
   columns: readonly Column<T>[]
-  slots?: { Cell?: ComponentType<CellProps<T>>; Header?: ComponentType<HeaderProps<T>> }
+  slots?: { cell?: ComponentType<CellProps<T>>; header?: ComponentType<HeaderProps<T>> }
+  slotProps?: { cell?: HTMLAttributes<HTMLDivElement>; header?: HTMLAttributes<HTMLDivElement> }
 }
 ```
 
@@ -75,10 +79,11 @@ CSS variables (initial set, prefixed `--gridnova-`): header background and color
 
 - One header per column, one cell per row and column, with `grid`, `row`, `columnheader` and `gridcell` roles (if D1 = B).
 - A plain `field` and a computed `value` both render; `value` wins when both are set.
-- `renderCell` replaces cell content; `slots.Cell` and `slots.Header` replace the elements; the default is used when absent.
+- `renderCell` replaces cell content; `slots.cell` and `slots.header` replace the elements; the default is used when absent.
+- `slotProps.cell` and `slotProps.header` add attributes, `className`, `style` and handlers to the default or replaced part; the grid's own attributes win, `className` and `style` merge, and handlers compose (tested).
 - Types: `field` only accepts keys of the row type; passing a wrong key is a compile error (tested).
 - Default styles apply and every documented variable changes the result.
-- Headers and cells carry `data-column-id`, and custom `Cell` and `Header` slots receive the attributes to spread onto their element (tested).
+- Headers and cells carry `data-column-id`, and custom `cell` and `header` slots receive the attributes to spread onto their element (tested).
 - The playground shows the grid with a custom `renderCell` and a custom `Cell` slot.
 - `format:check`, `lint`, `typecheck`, `test:run` and `build` pass.
 
