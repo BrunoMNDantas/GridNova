@@ -107,6 +107,16 @@ The 32-feature, six-phase order in `docs/roadmap.md` is approved as the plan. Ch
 
 Scrolling is an action, not state, so it is exposed as a method on a grid ref (for example `gridRef.current.scrollToCell(rowId, columnId)`), not as a prop. It must work for cells that are not rendered because of virtualization. The exact signature is decided in that feature's document.
 
+### 22. `data-*` attributes are the styling API; ARIA is for accessibility
+
+Elements expose their state as `data-*` attributes so consumers can style them from CSS alone (for example `[data-pinned]`, `[data-column-id="price"]`). ARIA attributes are set separately, for assistive technology only; both come from the same state, so they cannot drift, and CSS never needs to depend on ARIA. Rules:
+
+- Boolean states are present or absent (`data-selected`), never `="true"` or `="false"`. Consumers select the absent case with `:not([data-selected])`. In React, render `''` when on and `undefined` when off (never a boolean, because `false` would render `"false"` and still match `[data-selected]`); use one small helper for this.
+- Each feature documents the attributes it adds, and adds them with the feature (not up front).
+- Every attribute name and value is public API.
+- Slot components receive the attributes to spread onto their element, so replacing `Cell` or `Header` does not silently drop them.
+- Tests assert both the `data-*` and the ARIA attribute for a state.
+
 ## Proposed (not yet approved)
 
 - Whether right-to-left (RTL) languages are in scope (deferred; the i18n-readiness rules in 17 keep the option open).

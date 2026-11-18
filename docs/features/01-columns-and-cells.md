@@ -12,6 +12,7 @@ Replace the scaffold placeholder `Grid` with the real foundation: typed column d
 - Header and cell rendering with accessible roles.
 - Customization through slots (decision 3): `Cell` and `Header`.
 - Default styling with `--gridnova-` CSS variables (decision 18), delivered to consumers in the way decided below.
+- `data-*` styling hooks (decision 22): `data-column-id` on headers and cells.
 - Playground demo and tests.
 
 ## Out of scope (later features)
@@ -77,6 +78,7 @@ CSS variables (initial set, prefixed `--gridnova-`): header background and color
 - `renderCell` replaces cell content; `slots.Cell` and `slots.Header` replace the elements; the default is used when absent.
 - Types: `field` only accepts keys of the row type; passing a wrong key is a compile error (tested).
 - Default styles apply and every documented variable changes the result.
+- Headers and cells carry `data-column-id`, and custom `Cell` and `Header` slots receive the attributes to spread onto their element (tested).
 - The playground shows the grid with a custom `renderCell` and a custom `Cell` slot.
 - `format:check`, `lint`, `typecheck`, `test:run` and `build` pass.
 
