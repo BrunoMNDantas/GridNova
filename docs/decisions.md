@@ -75,6 +75,39 @@ Scaffold approved in plan mode and created. Implementation details that came out
 - **TypeScript is pinned to 6.0.x and ESLint to 9.x**: typescript-eslint 8.72 supports TypeScript below 6.1, and eslint-plugin-jsx-a11y 6.10 supports ESLint up to 9. Revisit when those plugins publish support for TypeScript 7 and ESLint 10. pnpm flags ESLint 9.39 as deprecated; that is accepted until then.
 - `src/components/Grid.tsx` is a scaffold placeholder (plain generic table) used only to prove the toolchain; the first real feature replaces it.
 
+### 14. Output format: ESM only
+
+The plan said ESM + CJS, but the `.d.ts` produced by `tsc` under `"type": "module"` describes ESM only; shipping a CJS build with those types would give CommonJS consumers wrong types. Adding CJS properly needs separate `.d.cts` output and a package check (e.g. publint or arethetypeswrong). Revisit only if a real consumer needs CJS.
+
+### 15. Roadmap scope
+
+`docs/roadmap.md` lists the intended features and is approved as the scope. Build order is not decided.
+
+### 16. State must be JSON-serializable
+
+All exposed state is plain data (no functions or class instances). Persisting grid state (saved views, restoring after reload) is therefore an application concern, not a library feature.
+
+### 17. Internationalization readiness
+
+User-visible strings live in one default-strings object (never hardcoded in components), and CSS uses logical properties (start/end instead of left/right). Internationalization itself is a late feature.
+
+### 18. Styling ships with each feature
+
+Every feature ships with its own default styling, using CSS variables with a shared `--gridnova-` prefix. The later theming item only consolidates tokens, adds dark mode and density, and documents them.
+
+### 19. Menus open from a button
+
+Header and row menus are triggered by a button (not right-click).
+
+### 20. Roadmap build order
+
+The 32-feature, six-phase order in `docs/roadmap.md` is approved as the plan. Changes are brought to the owner when real constraints appear.
+
+### 21. Scroll to cell is an imperative ref method
+
+Scrolling is an action, not state, so it is exposed as a method on a grid ref (for example `gridRef.current.scrollToCell(rowId, columnId)`), not as a prop. It must work for cells that are not rendered because of virtualization. The exact signature is decided in that feature's document.
+
 ## Proposed (not yet approved)
 
-- **Output format: ESM only for now.** The plan said ESM + CJS, but the `.d.ts` produced by `tsc` under `"type": "module"` describes ESM only; shipping a CJS build with those types would give CommonJS consumers wrong types. Adding CJS properly needs separate `.d.cts` output and a package check (e.g. publint or arethetypeswrong). Decide before the first release.
+- Whether right-to-left (RTL) languages are in scope (deferred; the i18n-readiness rules in 17 keep the option open).
+- How CSS reaches consumers (a stylesheet they import versus styles bundled with the component). To be decided in the first feature's document.

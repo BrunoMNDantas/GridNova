@@ -4,7 +4,17 @@ Open-source, configurable, extensible React data grid library, developed increme
 
 ## Project status
 
-Foundation phase: stack and tooling decisions are being made. Approved decisions live in `docs/decisions.md`; anything not listed there is a proposal, not a commitment.
+Foundation is scaffolded and validated (TypeScript, pnpm, Vite, Vitest, ESLint, Prettier, CI, Prettier hook). Approved decisions live in `docs/decisions.md`; anything not listed there is a proposal, not a commitment. The approved feature plan is `docs/roadmap.md`.
+
+**Current focus:** Feature 1 (column definitions and cell rendering). Its draft is `docs/features/01-columns-and-cells.md`, awaiting the owner's decisions D1 to D4. After that: introduce skills by turning the feature-document procedure into a `/new-feature` skill.
+
+## Session workflow
+
+Work on one feature per session; start a fresh session (or `/clear`) between features. Continuity lives in files, not in the conversation:
+
+- At the start, read this file, `docs/decisions.md`, `docs/roadmap.md` and the current feature document.
+- At the end, update those files (decisions made, current focus, what remains) so the next session can start cold.
+- Long discussions and open decisions belong in the feature document, not only in chat.
 
 ## Collaboration rules
 
@@ -42,8 +52,10 @@ Package manager is pnpm (pinned via `packageManager`; enable with `corepack enab
 - `pnpm lint`, `pnpm typecheck`, `pnpm format:check` (`pnpm format` to fix).
 - `pnpm build`: library build (`dist/` JS via Vite plus `.d.ts` via tsc).
 
+A project hook (`.claude/settings.json`, script in `.claude/hooks/format.mjs`) runs Prettier on every file after Edit/Write, so formatting is automatic. Read a file again before a second edit if the hook may have reformatted it.
+
 Before calling work done, run `format:check`, `lint`, `typecheck`, `test:run` and `build`; CI runs the same.
 
 ## Layout
 
-`src/` library (single public entry `src/index.ts`), `playground/` dev-only Vite app, `docs/` decisions, feature docs and the learning checklist.
+`src/` library (single public entry `src/index.ts`), `playground/` dev-only Vite app, `docs/` decisions, roadmap (`docs/roadmap.md`), feature docs and the learning checklist.
