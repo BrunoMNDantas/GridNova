@@ -23,7 +23,11 @@ export default defineConfig([
     },
   },
   {
-    files: ['**/*.js'],
+    files: ['.claude/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node } },
+  },
+  {
+    files: ['**/*.js', '**/*.mjs'],
     extends: [tseslint.configs.disableTypeChecked],
   },
   prettier,
