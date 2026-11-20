@@ -1,0 +1,12 @@
+/*
+ * Body cell. Variables read here:
+ *   --gridnova-cell-padding      padding of header and body cells
+ */
+
+.gridnova-cell {
+    padding: var(--gridnova-cell-padding, 0.5rem 0.75rem);
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

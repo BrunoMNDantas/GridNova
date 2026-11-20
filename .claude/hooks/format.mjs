@@ -11,9 +11,9 @@ for await (const chunk of process.stdin) raw += chunk
 
 let payload
 try {
-  payload = JSON.parse(raw)
+    payload = JSON.parse(raw)
 } catch {
-  process.exit(0)
+    process.exit(0)
 }
 
 const file = payload?.tool_response?.filePath ?? payload?.tool_input?.file_path
@@ -29,11 +29,11 @@ if (!existsSync(prettier)) process.exit(0)
 
 // --ignore-unknown skips file types Prettier has no parser for; .prettierignore is honored by default.
 spawnSync(
-  process.execPath,
-  [prettier, '--write', '--ignore-unknown', '--log-level', 'silent', absolute],
-  {
-    cwd: projectDir,
-    stdio: 'ignore',
-  },
+    process.execPath,
+    [prettier, '--write', '--ignore-unknown', '--log-level', 'silent', absolute],
+    {
+        cwd: projectDir,
+        stdio: 'ignore',
+    },
 )
 process.exit(0)

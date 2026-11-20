@@ -1,5 +1,5 @@
 packages:
-  - playground
+    - playground
 
 # Refuse package versions published less than 14 days ago (value in minutes).
 minimumReleaseAge: 20160

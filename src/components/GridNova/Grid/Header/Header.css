@@ -1,0 +1,19 @@
+/*
+ * Header row. The track layout it shares with the data rows lives in Grid.css.
+ * Variables read here:
+ *   --gridnova-header-background header background
+ *   --gridnova-header-color      header text color
+ *   --gridnova-header-font-weight  header font weight
+ *   --gridnova-header-border     full border-block-end under the header
+ *   --gridnova-border-color      color of that line when --gridnova-header-border is not set
+ */
+
+.gridnova-header {
+    background: var(--gridnova-header-background, #f4f4f5);
+    color: var(--gridnova-header-color, inherit);
+    font-weight: var(--gridnova-header-font-weight, 600);
+    border-block-end: var(
+        --gridnova-header-border,
+        1px solid var(--gridnova-border-color, #d4d4d8)
+    );
+}

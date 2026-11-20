@@ -1,0 +1,9 @@
+/*
+ * Body. Variables read here:
+ *   --gridnova-row-border        full border-block-end between data rows
+ *   --gridnova-border-color      color of those lines when --gridnova-row-border is not set
+ */
+
+.gridnova-body .gridnova-row:not(:last-child) {
+    border-block-end: var(--gridnova-row-border, 1px solid var(--gridnova-border-color, #d4d4d8));
+}

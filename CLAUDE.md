@@ -6,7 +6,7 @@ Open-source, configurable, extensible React data grid library, developed increme
 
 Foundation is scaffolded and validated (TypeScript, pnpm, Vite, Vitest, ESLint, Prettier, CI, Prettier hook). Approved decisions live in `docs/decisions.md`; anything not listed there is a proposal, not a commitment. The approved feature plan is `docs/roadmap.md`.
 
-**Current focus:** Feature 1 (column definitions and cell rendering). Its draft is `docs/features/01-columns-and-cells.md`, awaiting the owner's decisions D1 to D4. After that: introduce skills by turning the feature-document procedure into a `/new-feature` skill.
+**Current focus:** Feature 1 (column definitions and cell rendering). Its document `docs/features/01-columns-and-cells.md` is approved (decisions 22 to 30), implemented, reviewed with the owner and docs updated; the playground was checked by the owner. Waiting only for the owner's approval to commit. After that: introduce skills by turning the feature-document procedure into a `/new-feature` skill, then feature 2 (row model and data access).
 
 ## Session workflow
 
@@ -25,6 +25,7 @@ Work on one feature per session; start a fresh session (or `/clear`) between fea
 - Challenge assumptions and flag risks when relevant.
 - No unnecessary abstractions, infrastructure, or speculative features.
 - Develop one feature at a time. Substantial features get a feature document in `docs/features/`; minor fixes and maintenance do not.
+- Implement features in small vertical slices. The feature document lists the slices in an "Implementation steps" section, approved before coding; each slice is end to end (types, code, tests, playground) and small enough to review in one sitting. After each slice, run the checks, say what to review (public types and exports first, then tests, then implementation), and stop until the owner approves it before starting the next.
 - Keep approved decisions in `docs/decisions.md`, clearly separated from proposals.
 - **Never create Git commits without explicit approval.**
 - Work directly with the owner; do not defer approval or review to other tools or assistants.
@@ -56,6 +57,12 @@ A project hook (`.claude/settings.json`, script in `.claude/hooks/format.mjs`) r
 
 Before calling work done, run `format:check`, `lint`, `typecheck`, `test:run` and `build`; CI runs the same.
 
+## Code style
+
+Component layout and ordering follow decision 29 in `docs/decisions.md`: consts, then effects, then handlers and functions, then the `Component` const (slot or default), then the `return`, with a blank line before the `return`.
+
 ## Layout
 
 `src/` library (single public entry `src/index.ts`), `playground/` dev-only Vite app, `docs/` decisions, roadmap (`docs/roadmap.md`), feature docs and the learning checklist.
+
+Inside `src/` (decision 27): `components/` (one folder per component, children nested in the parent's folder, `Default<Part>` next to `<Part>`), `hooks/`, `context/`, `utils/` and `types/`. Hooks, utils and shared domain types get one folder each when they have a test. The component consumers render is `GridNova`.

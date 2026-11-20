@@ -12,9 +12,9 @@ The typed API (generic row types, inferred column values) is central to the libr
 
 Strict dependency resolution catches undeclared dependencies on the developer's machine, before they reach consumers. Publishing to npm and consumer installs are unaffected.
 
-### 3. Public API: `<Grid>` with slots and CSS variables
+### 3. Public API: `<GridNova>` with slots and CSS variables
 
-- Users get a styled `<Grid>`, customizable through `slots` (replacing parts such as `cell` or `header`), `slotProps` (extra props for a part, including `className` and `style`; there is no separate classes prop) and CSS variables.
+- Users get a styled `<GridNova>`, customizable through `slots` (replacing parts such as `grid`, `cell` or `headerCell`), `slotProps` (extra props for a part, including `className` and `style`; there is no separate classes prop) and CSS variables.
 - `slots` and `slotProps` share lowercase keys. Conflict rules for `slotProps`: the grid's own attributes (roles, ARIA, `data-*`) win, `className` and `style` merge, and event handlers compose (both run). Each part added to `slots` gets its `slotProps` entry with it.
 - Internals are layered: logic lives in hooks that render nothing, components stay thin, CSS does styling.
 - The hooks are **not** public API for now. They may be exported later if proven stable and needed.
@@ -74,7 +74,7 @@ Scaffold approved in plan mode and created. Implementation details that came out
 - Corepack provides pnpm; the version is pinned in `packageManager` (pnpm 12.21.0). Node 24 (`.nvmrc`).
 - `pnpm-workspace.yaml` sets `minimumReleaseAge` to 14 days, so pnpm refuses package versions newer than two weeks.
 - **TypeScript is pinned to 6.0.x and ESLint to 9.x**: typescript-eslint 8.72 supports TypeScript below 6.1, and eslint-plugin-jsx-a11y 6.10 supports ESLint up to 9. Revisit when those plugins publish support for TypeScript 7 and ESLint 10. pnpm flags ESLint 9.39 as deprecated; that is accepted until then.
-- `src/components/Grid.tsx` is a scaffold placeholder (plain generic table) used only to prove the toolchain; the first real feature replaces it.
+- `Grid` was a scaffold placeholder (plain generic table) used only to prove the toolchain; feature 1 replaced it.
 
 ### 14. Output format: ESM only
 
@@ -118,7 +118,69 @@ Elements expose their state as `data-*` attributes so consumers can style them f
 - Slot components receive the attributes to spread onto their element, so replacing `Cell` or `Header` does not silently drop them.
 - Tests assert both the `data-*` and the ARIA attribute for a state.
 
+### 23. DOM structure: `div`s with ARIA roles
+
+The grid renders `div`s with `grid`, `row`, `columnheader` and `gridcell` roles and CSS grid layout, not a `<table>`. Virtualization, sticky header, resizing and pinning are natural this way. We own the roles; `role="grid"` is only partly conformant until keyboard navigation (feature 7).
+
+### 24. Column definition
+
+- `Column<T, V = unknown>`: `id` (unique), `header` (string), `value: (row: T) => V` (accessor, required), optional `renderCell`, optional `width`, `minWidth`, `maxWidth`.
+- There is no `field` property. One accessor function covers plain and computed columns and is typed through `T`.
+- The cell value type is not narrowed per column (`V` defaults to `unknown`). Per-column value typing through a helper is deferred. Adding it later must not break `Column<T>`; verify in tests (for example by declaring `renderCell` as a method).
+- No column or row heights in `Column`: row height is a grid-level concern, designed in features 3 and 4.
+- No `defaultColumn` (or other defaults) at `GridNovaProps` level. Revisit only if repeating column options proves painful.
+
+### 25. Customization in feature 1
+
+- Per column: `renderCell({ value, row, column })` replaces only the content inside the default cell.
+- Grid level: `slots={{ grid, header, headerCell, body, cell }}` replace the whole grid element, body cell, header row or header cell element (`grid` is the grid's outer element, `header` the header row, `headerCell` each column header, `body` the element holding the data rows), and `slotProps={{ grid, header, headerCell, body, cell }}` add props (`className`, `style`, handlers, attributes) without replacing it. Slot and slot-prop keys are shared, lowercase and match the component names. There is no separate classes prop (`slotProps.<part>.className` covers it). Conflict rules: the grid's own attributes (roles, ARIA, `data-*`) win, `className` and `style` merge, event handlers compose.
+- Slot props stay minimal: the part's data in `context` (`value`, `row`, `column` for `cell`; `column` for `headerCell`; none for `grid`, `header` and `body`), plus the element attributes as ordinary props (decisions 22 and 28).
+- Not in feature 1: a `Row` slot (probably feature 2 or 6, when a row has something to customize).
+
+### 26. CSS delivery: imported stylesheet
+
+Default styles ship as a stylesheet the consumer imports once (`import 'gridnova/styles.css'`), with plain `gridnova-*` class names (not hashed) and `--gridnova-` variables. No runtime style injection and no CSS-in-JS. Requires the library build to emit the CSS file, and `package.json` `exports` and `sideEffects` to cover it. Each component owns its styling: its plain CSS file sits in the component's folder (`Grid/Grid.css`) and the component imports it; the build bundles all of them into the single `dist/styles.css`. CSS Modules are not used, because they would hash the public class names.
+
+### 27. One folder per component
+
+Each component lives in its own folder under `src/components/`, together with its test, its CSS and the files only it uses (for example `src/components/GridNova/GridNova.tsx` and `GridNova.test.tsx`). No barrel (`index.ts`) per folder; the public API is only `src/index.ts`.
+
+Child components: a child used only by one parent lives inside the parent's folder (for example `GridNova/Grid/Cell/Cell.tsx`, with its own test). Anything used by two or more components moves up to its own folder under `src/components/` (or to `src/` if it is not a component). Nesting follows the component tree and has no depth limit: a grandchild used only by its parent lives in that parent's folder. A child gets a folder only once it is a real component with its own file and test; until then it stays inline in the parent.
+
+Hooks are not part of the component tree: all of them live in one `src/hooks/` folder, outside `src/components/`, one folder per hook, holding the hook and its test (for example `src/hooks/useGrid/useGrid.ts` and `useGrid.test.tsx`), no barrel file. This holds even for a hook used by a single component. (Amended 2026-11-20: hooks were previously placed by the generic rule above, next to their users.)
+
+React contexts are not components either: they live in `src/context/`. A context that is only a `createContext` call and its type is a single file (`src/context/GridContext.ts`). It gets its own folder only when it has something to put next to it, such as a test, a provider component or a types file (deferred until a type outgrows its file).
+
+Pure helper functions (no React hooks inside, so not hooks) live in `src/utils/`, one folder per helper holding the function and its test (for example `src/utils/mergeProps/mergeProps.ts` and `mergeProps.test.ts`), no barrel file. A function that does not call a React hook is not named `use*`.
+
+Types follow the same layering. A component's props type is defined and exported next to the component (`GridNovaProps`, `GridSlots` and `GridSlotProps` in `GridNova.tsx`; `CellProps` and the others in the `Default*` files). Domain types shared across the library live in `src/types/`: a type with a test gets a folder (`src/types/Column/Column.ts` and `Column.test.ts`), any other is a single file. Types of the slot system, such as `SlotAttributes`, live with the slots (`components/GridNova/SlotAttributes.ts`); utils stay generic and do not import them (`mergeProps` is generic over the attribute type). There is no catch-all `types.ts`. (Amended 2026-11-20: types used to live in `components/GridNova/types.ts`, which made utils and the context depend on a component folder.)
+
+### 28. Slots share the default component's props; internal `GridContext`
+
+- Each part's props type is defined and exported next to its component (`CellProps`, `HeaderCellProps`, `HeaderProps`, `BodyProps`, `GridProps`). The default component takes exactly those props, and `GridSlots` is derived from them: a slot is a `ComponentType` of the same props as the default.
+- Slot props are flat, as in MUI: a slot receives the part's HTML attributes (role, class, `style`, `data-*`, handlers, `children`, merged with `slotProps`) as ordinary props, so it can spread them onto its element like the default component does. Data that is not an HTML attribute goes in one extra prop, `context` (`{ value, row, column }` for `cell`, `{ column }` for `headerCell`; `grid` and `header` have none). A slot pulls out `context` before spreading the rest: `function MyCell({ context, ...props }) { return <div {...props} /> }`. Trade-off accepted: forgetting to pull out `context` leaks it onto the DOM element. (Nested `attributes` was considered and rejected.)
+- Naming: the component in the tree is named after the part (`Grid`, `Header`, `HeaderCell`, `Body`, `Cell`). Each is a container: it reads the grid context through `useGrid()`, computes the attributes (own attributes merged with `slotProps`) and renders `slots.<part> ?? Default<Part>`. The presentational default (`DefaultGrid`, `DefaultHeader`, `DefaultHeaderCell`, `DefaultBody`, `DefaultCell`) only renders an element with the given attributes, and it is what a slot replaces. The component consumers render is `GridNova` (props: `GridNovaProps`): it builds the context value from its props, provides it and renders `Grid`, so the tree reads `GridNova → Grid → Header → HeaderCell` and `Grid → Body → Cell` (rows are inline in `Body` until a real `Row` component exists). `GridNova` is the only component that does not read the context. Each part's props type is `<Part>Props` (`GridProps` = what `DefaultGrid` and `slots.grid` take). One component per file: `Header/Header.tsx` exports only `Header`, `Header/DefaultHeader.tsx` only `DefaultHeader`, each with its own test. (Amended 2026-11-20: originally the presentational component took the plain name and the smart one had a `Container` suffix, and both lived in one file; later `Grid` became a context-reading part and the entry component was named `GridNova`, because one component cannot both provide the context and read it.)
+- `GridContext` (the type of the internal context value, in `src/context/GridContext.ts`, not public API; the React context object is `Context`) holds what parts need: `rows`, `columns`, `slots`, `slotProps`; later also derived rows and columns (sorted, filtered, reordered) and feature state, each added by its feature. Parts read it through the `useGrid()` hook. Risk: one context value re-renders all consumers when it changes; revisit (split stable and changing parts, or a small store with selectors) with virtualization, keeping `useGrid()` as the only access point.
+- Attributes: each part merges its own attributes with `slotProps.<part>` through the pure `mergeProps` (`src/utils/mergeProps/`; conflict rules in decision 25). A `useAttributes` hook wrapping this was tried and reverted (2026-11-20): it only saved passing `slotProps?.<part>`, and `Grid` could not use it anyway because it provides the context.
+
+### 29. Component code style
+
+Order inside a component, separated by blank lines:
+
+1. Const declarations (hooks, derived values, props to forward).
+2. `useEffect`s.
+3. Handlers and helper functions.
+4. The `Component` const when a part chooses between a slot and its default (`const Component = slots?.x ?? DefaultX`), alone, right before the return.
+5. The `return`.
+
+There is always a blank line before the `return` (enforced by ESLint, `padding-line-between-statements`) and before the `Component` const. The section order is a convention, not linted. Sections that a component does not need are simply absent.
+
+### 30. All components are public
+
+Every component is exported from `src/index.ts`: `GridNova` (the one consumers render), `Grid`, `Header`, `HeaderCell`, `Body`, `Cell` and the defaults `DefaultGrid`, `DefaultHeader`, `DefaultHeaderCell`, `DefaultBody`, `DefaultCell`. Consumers can reuse them inside slots and recompose parts (for example a header cell with its pieces in a different order). Leaf pieces added by later features (sort indicator, column menu) are exported the same way. `GridContext` and `useGrid` stay internal for now; a curated public hook is proposed by the feature that first needs one.
+
+Consequences accepted: the props of `Header`, `HeaderCell` and `Cell` (`column`, `row`) and their behavior are public and follow semver. Everything except `GridNova` only works inside `<GridNova>` (it reads the grid context and throws outside it), so the docs must say so.
+
 ## Proposed (not yet approved)
 
 - Whether right-to-left (RTL) languages are in scope (deferred; the i18n-readiness rules in 17 keep the option open).
-- How CSS reaches consumers (a stylesheet they import versus styles bundled with the component). To be decided in the first feature's document.

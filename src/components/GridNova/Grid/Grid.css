@@ -1,0 +1,22 @@
+/*
+ * GridNova default styles. Override through the --gridnova-* variables (set them on the
+ * grid or any ancestor) or by targeting the gridnova-* classes and data-* attributes.
+ * Each component documents the variables it reads in its own CSS file.
+ *
+ * Variables read here:
+ *   --gridnova-font              font shorthand for the whole grid
+ *   --gridnova-border-color      color of every line: grid border, under the header, between rows
+ *   --gridnova-column-min-width  minimum width of flexible columns (read by the component)
+ */
+
+.gridnova {
+    font: var(--gridnova-font, inherit);
+    border: 1px solid var(--gridnova-border-color, #d4d4d8);
+}
+
+/* Layout shared by the header row and the data rows: one grid track per column. */
+.gridnova-header,
+.gridnova-row {
+    display: grid;
+    grid-template-columns: var(--gridnova-template-columns);
+}
